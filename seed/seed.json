@@ -1,0 +1,21 @@
+{
+  "pipelines": [
+    { "id": "pl-flasharray-nightly", "name": "FlashArray Nightly", "product": "flasharray" },
+    { "id": "pl-flashblade-pr", "name": "FlashBlade PR Gate", "product": "flashblade" },
+    { "id": "pl-hyperscale-soak", "name": "Hyperscale Soak", "product": "hyperscale" }
+  ],
+  "runs": [
+    { "id": "run-0001", "pipelineId": "pl-flasharray-nightly", "status": "passed", "startedAt": "2026-10-10T01:00:00Z", "finishedAt": "2026-10-10T02:12:00Z", "durationMs": 4320000, "triggeredBy": "scheduler", "commitSha": "9f1c2a7d3b4e5f60718293a4b5c6d7e8f9a0b1c2" },
+    { "id": "run-0002", "pipelineId": "pl-flasharray-nightly", "status": "failed", "startedAt": "2026-10-11T01:00:00Z", "finishedAt": "2026-10-11T01:48:00Z", "durationMs": 2880000, "triggeredBy": "scheduler", "commitSha": "a1b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e" },
+    { "id": "run-0003", "pipelineId": "pl-flasharray-nightly", "status": "flaky", "startedAt": "2026-10-12T01:00:00Z", "finishedAt": "2026-10-12T02:05:00Z", "durationMs": 3900000, "triggeredBy": "scheduler", "commitSha": "b2c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f" },
+    { "id": "run-0004", "pipelineId": "pl-flasharray-nightly", "status": "running", "startedAt": "2026-10-14T01:00:00Z", "triggeredBy": "scheduler", "commitSha": "c3d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a" },
+    { "id": "run-0005", "pipelineId": "pl-flashblade-pr", "status": "passed", "startedAt": "2026-10-13T09:10:00Z", "finishedAt": "2026-10-13T09:31:00Z", "durationMs": 1260000, "triggeredBy": "priya.n", "commitSha": "d4e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b" },
+    { "id": "run-0006", "pipelineId": "pl-flashblade-pr", "status": "queued", "startedAt": "2026-10-14T06:00:00Z", "triggeredBy": "arun.k", "commitSha": "e5f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b7c" },
+    { "id": "run-0007", "pipelineId": "pl-hyperscale-soak", "status": "failed", "startedAt": "2026-10-12T20:00:00Z", "finishedAt": "2026-10-13T04:00:00Z", "durationMs": 28800000, "triggeredBy": "scheduler", "commitSha": "f60718293a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d" }
+  ],
+  "notes": [
+    { "id": "note-0001", "runId": "run-0002", "author": "priya.n", "body": "iSCSI reconnect test timed out on node 3; same as last Tuesday." },
+    { "id": "note-0002", "runId": "run-0003", "author": "arun.k", "body": "Passed on retry. Suspect test ordering dependency." },
+    { "id": "note-0003", "runId": "run-0007", "author": "scheduler", "body": "OOM in soak harness after 7h." }
+  ]
+}
