@@ -8,7 +8,8 @@ RUN go mod download
 
 COPY . .
 # CGO_ENABLED=0 -> fully static binary that runs on an image with no libc.
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/api ./cmd/api
+# Build every command (api, migrate) into /out; one image, different entrypoints.
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/ ./cmd/...
 
 # --- Stage 2: runtime (tiny, no shell, runs as non-root) ---
 FROM gcr.io/distroless/static-debian12:nonroot
