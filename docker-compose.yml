@@ -16,6 +16,16 @@ services:
       timeout: 3s
       retries: 30
 
+  migrate:
+    build: ./backend
+    entrypoint: ["/app/migrate"]
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/pulse?sslmode=disable
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build: ./backend
     environment:
@@ -26,6 +36,8 @@ services:
     depends_on:
       db:
         condition: service_healthy # wait until Postgres accepts connections, not just "started"
+      migrate:
+        condition: service_completed_successfully # fail fast: no api on a broken schema
     restart: unless-stopped
 
 volumes:
