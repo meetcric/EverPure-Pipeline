@@ -13,6 +13,8 @@ import (
 
 	"pipelinepulse/internal/db"
 	"pipelinepulse/internal/httpapi"
+	"pipelinepulse/internal/service"
+	"pipelinepulse/internal/store"
 )
 
 func main() {
@@ -36,9 +38,14 @@ func run() error {
 	}
 	defer pool.Close()
 
+	// Wire the layers bottom-up: store (SQL) → service (rules) → router (HTTP).
+	pipelines := service.NewPipelineService(store.NewPipelineStore(pool))
+
 	srv := &http.Server{
 		Addr:    ":" + envOr("PORT", "8080"),
-		Handler: httpapi.NewRouter(pool),
+		Handler: httpapi.NewRouter(pool, pipelines),
+		// Limits only the request headers (Slowloris guard), so long SSE responses are unaffected.
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	errCh := make(chan error, 1)

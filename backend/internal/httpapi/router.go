@@ -1,15 +1,18 @@
 // Package httpapi holds HTTP routing and handlers for /api/v1.
 package httpapi
 
-import (
-	"net/http"
-
-	"github.com/jackc/pgx/v5/pgxpool"
-)
+import "net/http"
 
 // NewRouter wires every route. Go 1.22+ ServeMux supports "METHOD /path/{param}".
-func NewRouter(pool *pgxpool.Pool) http.Handler {
+// It takes interfaces, not concrete types, so httpapi never imports pgx or the service package.
+func NewRouter(db pinger, pipelines PipelineService) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/health", healthHandler(pool))
+	mux.HandleFunc("GET /api/v1/health", healthHandler(db))
+
+	ph := pipelineHandler{svc: pipelines}
+	mux.HandleFunc("GET /api/v1/pipelines", ph.list)
+	mux.HandleFunc("POST /api/v1/pipelines", ph.create)
+	mux.HandleFunc("GET /api/v1/pipelines/{id}", ph.get)
+	mux.HandleFunc("DELETE /api/v1/pipelines/{id}", ph.delete)
 	return mux
 }

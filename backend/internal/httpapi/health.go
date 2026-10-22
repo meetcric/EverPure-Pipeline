@@ -2,9 +2,10 @@ package httpapi
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"time"
+
+	"pipelinepulse/internal/utils/httpjson"
 )
 
 // pinger is the only thing health needs from the DB, which keeps it easy to fake in tests.
@@ -22,8 +23,6 @@ func healthHandler(db pinger) http.HandlerFunc {
 		if err := db.Ping(ctx); err != nil {
 			status, body = http.StatusServiceUnavailable, map[string]string{"status": "degraded", "db": "down"}
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
-		_ = json.NewEncoder(w).Encode(body)
+		httpjson.Write(w, status, body)
 	}
 }
