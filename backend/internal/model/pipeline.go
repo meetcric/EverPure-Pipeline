@@ -26,3 +26,10 @@ type CreatePipelineInput struct {
 	Name    string  `json:"name"`
 	Product Product `json:"product"`
 }
+
+// UpdatePipelineInput is what a client may send on PATCH /pipelines/{id}.
+// Pointers tell "not sent" (nil → keep the old value) apart from "sent empty" ("" → 400).
+type UpdatePipelineInput struct {
+	Name    *string  `json:"name"`
+	Product *Product `json:"product"`
+}

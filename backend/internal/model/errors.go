@@ -2,8 +2,9 @@ package model
 
 import "errors"
 
-// ErrNotFound means the requested row does not exist. Handlers map it to 404.
 var ErrNotFound = errors.New("not found")
+
+var ErrIdempotencyMismatch = errors.New("idempotency key was already used with a different request body")
 
 // ValidationError means the input broke a rule. Handlers map it to 400.
 type ValidationError struct {

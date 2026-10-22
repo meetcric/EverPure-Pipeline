@@ -13,6 +13,7 @@ func NewRouter(db pinger, pipelines PipelineService) http.Handler {
 	mux.HandleFunc("GET /api/v1/pipelines", ph.list)
 	mux.HandleFunc("POST /api/v1/pipelines", ph.create)
 	mux.HandleFunc("GET /api/v1/pipelines/{id}", ph.get)
+	mux.HandleFunc("PATCH /api/v1/pipelines/{id}", ph.update)
 	mux.HandleFunc("DELETE /api/v1/pipelines/{id}", ph.delete)
 	return mux
 }

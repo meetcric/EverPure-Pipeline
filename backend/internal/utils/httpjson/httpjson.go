@@ -20,6 +20,15 @@ func Write(w http.ResponseWriter, status int, v any) {
 	}
 }
 
+// WriteRaw sends body, which is already JSON, unchanged. Used to replay saved responses.
+func WriteRaw(w http.ResponseWriter, status int, body []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if _, err := w.Write(body); err != nil {
+		slog.Error("write response", "err", err)
+	}
+}
+
 // errorBody is the shape the brief requires: {"error": {"code": "...", "message": "..."}}.
 type errorBody struct {
 	Error errorDetail `json:"error"`
