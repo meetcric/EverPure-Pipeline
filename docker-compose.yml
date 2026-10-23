@@ -42,5 +42,13 @@ services:
         condition: service_completed_successfully # fail fast: no api on a broken schema
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    restart: unless-stopped
+
 volumes:
   pgdata:
