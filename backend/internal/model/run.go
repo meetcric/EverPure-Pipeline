@@ -40,6 +40,19 @@ func (s Status) Terminal() bool {
 	return s == StatusPassed || s == StatusFailed || s == StatusFlaky
 }
 
+// Stage orders statuses along the lifecycle: queued 0, running 1, finished 2.
+// A run only ever moves to a higher stage, so a lower or equal one is a stale event.
+func (s Status) Stage() int {
+	switch {
+	case s == StatusQueued:
+		return 0
+	case s == StatusRunning:
+		return 1
+	default:
+		return 2
+	}
+}
+
 // CreateRunInput is what a client may send on POST /pipelines/{id}/runs.
 // No ID, status or times: a new run always starts as queued, timed by the DB.
 type CreateRunInput struct {

@@ -25,13 +25,19 @@ type RunStore interface {
 	PipelineExists(ctx context.Context, id string) (bool, error)
 }
 
-// RunService implements httpapi.RunService.
-type RunService struct {
-	store RunStore
+// StatusPublisher tells live listeners (SSE streams) that a run's status changed.
+type StatusPublisher interface {
+	Publish(runID string, status model.Status)
 }
 
-func NewRunService(store RunStore) *RunService {
-	return &RunService{store: store}
+// RunService implements httpapi.RunService.
+type RunService struct {
+	store  RunStore
+	events StatusPublisher
+}
+
+func NewRunService(store RunStore, events StatusPublisher) *RunService {
+	return &RunService{store: store, events: events}
 }
 
 // Get returns the run with its notes, oldest note first.
@@ -167,8 +173,13 @@ func (s *RunService) UpdateStatus(ctx context.Context, id string, in model.Updat
 		return model.Run{}, &model.ValidationError{Message: "status must be one of queued, running, passed, failed, flaky"}
 	}
 	run, err := s.store.UpdateStatus(ctx, id, in.Status, allowedFrom[in.Status])
+	if err == nil {
+		// Publish only after the DB write succeeded, so listeners never see a status that wasn't saved.
+		s.events.Publish(run.ID, run.Status)
+		return run, nil
+	}
 	if !errors.Is(err, model.ErrNotFound) {
-		return run, err
+		return model.Run{}, err
 	}
 	// Nothing was updated: either the run doesn't exist, or its status doesn't allow this move.
 	cur, err := s.store.Get(ctx, id)

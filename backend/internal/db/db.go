@@ -22,7 +22,7 @@ func Connect(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	for i := 1; i <= attempts; i++ {
 		pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		err = pool.Ping(pingCtx)
-		defer cancel()
+		cancel()
 		if err == nil {
 			return pool, nil
 		}

@@ -72,8 +72,8 @@ func TestRoutes(t *testing.T) {
 		wantCode int
 		wantBody string // substring the response must contain; "" = don't check
 	}{
-		{"health ok", NewRouter(fakePinger{}, nil, nil, nil), "GET", "/api/v1/health", "", nil, 200, `"db":"ok"`},
-		{"health db down", NewRouter(fakePinger{err: errors.New("down")}, nil, nil, nil), "GET", "/api/v1/health", "", nil, 503, `"db":"down"`},
+		{"health ok", NewRouter(fakePinger{}, nil, nil, nil, nil), "GET", "/api/v1/health", "", nil, 200, `"db":"ok"`},
+		{"health db down", NewRouter(fakePinger{err: errors.New("down")}, nil, nil, nil, nil), "GET", "/api/v1/health", "", nil, 503, `"db":"down"`},
 
 		{"get pipeline", pipelinesRouter(nil), "GET", "/api/v1/pipelines/pl-1", "", nil, 200, `"id":"pl-1"`},
 		{"get missing pipeline", pipelinesRouter(model.ErrNotFound), "GET", "/api/v1/pipelines/nope", "", nil, 404, `"not_found"`},
@@ -129,13 +129,13 @@ func TestInternalErrorHidesCause(t *testing.T) {
 }
 
 func pipelinesRouter(err error) http.Handler {
-	return NewRouter(fakePinger{}, fakePipelines{err: err}, nil, nil)
+	return NewRouter(fakePinger{}, fakePipelines{err: err}, nil, nil, nil)
 }
 
 func runsRouter(err error) http.Handler {
-	return NewRouter(fakePinger{}, nil, fakeRuns{err: err}, nil)
+	return NewRouter(fakePinger{}, nil, fakeRuns{err: err}, nil, nil)
 }
 
 func notesRouter(err error) http.Handler {
-	return NewRouter(fakePinger{}, nil, nil, fakeNotes{err: err})
+	return NewRouter(fakePinger{}, nil, nil, fakeNotes{err: err}, nil)
 }
