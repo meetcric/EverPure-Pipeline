@@ -74,6 +74,41 @@ func (s *RunStore) UpdateStatus(ctx context.Context, id string, to model.Status,
 	return collectRun(rows, "update run status")
 }
 
+func (s *RunStore) List(ctx context.Context, q model.ListRunsQuery) ([]model.Run, error) {
+	sql := `SELECT ` + runColumns + ` FROM runs WHERE pipeline_id = $1`
+	args := []any{q.PipelineID}
+	if q.Status != "" {
+		args = append(args, string(q.Status))
+		sql += fmt.Sprintf(` AND status = $%d`, len(args))
+	}
+	if q.After != nil {
+		// Row comparison: strictly older than the cursor, with id breaking ties on equal started_at.
+		args = append(args, q.After.StartedAt, q.After.ID)
+		sql += fmt.Sprintf(` AND (started_at, id) < ($%d, $%d)`, len(args)-1, len(args))
+	}
+	args = append(args, q.Limit)
+	sql += fmt.Sprintf(` ORDER BY started_at DESC, id DESC LIMIT $%d`, len(args))
+
+	rows, err := s.pool.Query(ctx, sql, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list runs: %w", err)
+	}
+	runs, err := pgx.CollectRows(rows, scanRun)
+	if err != nil {
+		return nil, fmt.Errorf("list runs: %w", err)
+	}
+	return runs, nil
+}
+
+func (s *RunStore) PipelineExists(ctx context.Context, id string) (bool, error) {
+	var ok bool
+	err := s.pool.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM pipelines WHERE id = $1)`, id).Scan(&ok)
+	if err != nil {
+		return false, fmt.Errorf("check pipeline: %w", err)
+	}
+	return ok, nil
+}
+
 // ListNotes returns the run's notes, oldest first ([] when there are none).
 func (s *RunStore) ListNotes(ctx context.Context, runID string) ([]model.Note, error) {
 	rows, err := s.pool.Query(ctx,

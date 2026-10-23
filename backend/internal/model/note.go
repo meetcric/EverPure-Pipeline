@@ -10,3 +10,9 @@ type Note struct {
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"createdAt"`
 }
+
+// CreateNoteInput is what a client may send on POST /runs/{id}/notes.
+type CreateNoteInput struct {
+	Author string `json:"author"`
+	Body   string `json:"body"`
+}

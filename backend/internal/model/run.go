@@ -58,3 +58,31 @@ type RunWithNotes struct {
 	Run
 	Notes []Note `json:"notes"`
 }
+
+// ListRunsInput is the query string of GET /pipelines/{id}/runs, as the client sent it.
+// Zero values mean "not sent": no status filter, default limit, first page.
+type ListRunsInput struct {
+	Status Status
+	Limit  int
+	Cursor string
+}
+
+// RunCursor is the position of the last run on a page. The next page starts strictly after it.
+type RunCursor struct {
+	StartedAt time.Time
+	ID        string
+}
+
+// ListRunsQuery is the validated query the store runs. After is nil on the first page.
+type ListRunsQuery struct {
+	PipelineID string
+	Status     Status
+	Limit      int
+	After      *RunCursor
+}
+
+// RunPage is one page of runs. NextCursor is null when there are no more pages.
+type RunPage struct {
+	Items      []Run   `json:"items"`
+	NextCursor *string `json:"nextCursor"`
+}
