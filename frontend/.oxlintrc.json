@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  },
+  "overrides": [
+    {
+      "files": ["src/ui/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          { "patterns": [{ "group": ["**/api/*"], "message": "UI goes through state hooks (src/state), never the API layer." }] }
+        ]
+      }
+    },
+    {
+      "files": ["src/state/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          { "patterns": [{ "group": ["**/ui/*"], "message": "State must not depend on presentation." }] }
+        ]
+      }
+    },
+    {
+      "files": ["src/api/**", "src/types.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          { "patterns": [{ "group": ["**/state/*", "**/ui/*"], "message": "The API layer and types must not depend on state or UI." }] }
+        ]
+      }
+    }
+  ]
+}
