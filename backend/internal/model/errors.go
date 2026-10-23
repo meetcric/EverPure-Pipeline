@@ -12,3 +12,6 @@ type ValidationError struct {
 }
 
 func (e *ValidationError) Error() string { return e.Message }
+
+// ErrInvalidTransition means the run's current status does not allow the requested one. Handlers map it to 409.
+var ErrInvalidTransition = errors.New("invalid status transition")

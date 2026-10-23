@@ -40,10 +40,11 @@ func run() error {
 
 	// Wire the layers bottom-up: store (SQL) → service (rules) → router (HTTP).
 	pipelines := service.NewPipelineService(store.NewPipelineStore(pool))
+	runs := service.NewRunService(store.NewRunStore(pool))
 
 	srv := &http.Server{
 		Addr:    ":" + envOr("PORT", "8080"),
-		Handler: httpapi.NewRouter(pool, pipelines),
+		Handler: httpapi.NewRouter(pool, pipelines, runs),
 		// Limits only the request headers (Slowloris guard), so long SSE responses are unaffected.
 		ReadHeaderTimeout: 5 * time.Second,
 	}

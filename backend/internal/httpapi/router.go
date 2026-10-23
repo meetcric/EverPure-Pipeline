@@ -5,7 +5,7 @@ import "net/http"
 
 // NewRouter wires every route. Go 1.22+ ServeMux supports "METHOD /path/{param}".
 // It takes interfaces, not concrete types, so httpapi never imports pgx or the service package.
-func NewRouter(db pinger, pipelines PipelineService) http.Handler {
+func NewRouter(db pinger, pipelines PipelineService, runs RunService) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v1/health", healthHandler(db))
 
@@ -15,5 +15,10 @@ func NewRouter(db pinger, pipelines PipelineService) http.Handler {
 	mux.HandleFunc("GET /api/v1/pipelines/{id}", ph.get)
 	mux.HandleFunc("PATCH /api/v1/pipelines/{id}", ph.update)
 	mux.HandleFunc("DELETE /api/v1/pipelines/{id}", ph.delete)
+
+	rh := runHandler{svc: runs}
+	mux.HandleFunc("POST /api/v1/pipelines/{id}/runs", rh.create)
+	mux.HandleFunc("GET /api/v1/runs/{id}", rh.get)
+	mux.HandleFunc("PATCH /api/v1/runs/{id}", rh.update)
 	return mux
 }

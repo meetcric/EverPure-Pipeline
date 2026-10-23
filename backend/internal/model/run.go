@@ -25,3 +25,36 @@ type Run struct {
 	TriggeredBy string     `json:"triggeredBy"`
 	CommitSha   string     `json:"commitSha"`
 }
+
+// Valid reports whether s is one of the five known statuses.
+func (s Status) Valid() bool {
+	switch s {
+	case StatusQueued, StatusRunning, StatusPassed, StatusFailed, StatusFlaky:
+		return true
+	}
+	return false
+}
+
+// Terminal reports whether the run has finished (passed, failed or flaky).
+func (s Status) Terminal() bool {
+	return s == StatusPassed || s == StatusFailed || s == StatusFlaky
+}
+
+// CreateRunInput is what a client may send on POST /pipelines/{id}/runs.
+// No ID, status or times: a new run always starts as queued, timed by the DB.
+type CreateRunInput struct {
+	TriggeredBy string `json:"triggeredBy"`
+	CommitSha   string `json:"commitSha"`
+}
+
+// UpdateRunInput is what a client may send on PATCH /runs/{id}.
+type UpdateRunInput struct {
+	Status Status `json:"status"`
+}
+
+// RunWithNotes is the GET /runs/{id} response. Embedding Run puts its fields
+// at the top level of the JSON, next to "notes".
+type RunWithNotes struct {
+	Run
+	Notes []Note `json:"notes"`
+}

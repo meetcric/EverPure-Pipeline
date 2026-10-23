@@ -10,7 +10,7 @@ import (
 )
 
 // writeServiceError turns an error from the service layer into an HTTP response.
-// This is the only place that decides 400 vs 404 vs 500.
+// This is the only place that decides 400 vs 404 vs 409 vs 500.
 func writeServiceError(w http.ResponseWriter, r *http.Request, err error) {
 	var vErr *model.ValidationError
 	switch {
@@ -18,6 +18,8 @@ func writeServiceError(w http.ResponseWriter, r *http.Request, err error) {
 		httpjson.Error(w, http.StatusBadRequest, "validation_error", vErr.Message)
 	case errors.Is(err, model.ErrNotFound):
 		httpjson.Error(w, http.StatusNotFound, "not_found", "resource not found")
+	case errors.Is(err, model.ErrInvalidTransition):
+		httpjson.Error(w, http.StatusConflict, "invalid_transition", err.Error())
 	case errors.Is(err, model.ErrIdempotencyMismatch):
 		httpjson.Error(w, http.StatusUnprocessableEntity, "idempotency_key_mismatch", err.Error())
 	default:
