@@ -2,69 +2,57 @@
 
 Assignment ID: **EVP-FS-TH-01**
 
-A dashboard for viewing and managing CI pipeline runs: a Go REST API with Postgres, plus a React + TypeScript frontend.
+Dashboard for CI pipeline runs. Go API + Postgres, React + TypeScript frontend.
 
 ## Run
 
-Requires Docker with Compose v2. No `.env` or other setup is needed.
+```bash
+docker compose up --build
+make seed                      # after the stack is up; safe to run twice
+```
+
+- App: http://localhost:3000
+- API: http://localhost:8080/api/v1 (`/health` → `{"status":"ok","db":"ok"}`)
+
+Order: `db` → `migrate` (runs once, exits) → `api` → `frontend` (nginx, proxies `/api`).
+
+Tests:
 
 ```bash
-docker compose up --build        # add -d to run in the background
+cd backend && go test -race ./...
+cd frontend && npm test
 ```
 
-This starts, in order:
-1. `db`: Postgres 16, with data stored in the `pgdata` volume
-2. `migrate`: applies the SQL migrations in `backend/migrations/`, then exits
-3. `api`: the REST API on port 8080, started only after migrations succeed
-
-Check that it's up:
-
-```bash
-curl http://localhost:8080/api/v1/health   # {"db":"ok","status":"ok"}
-```
-
-- API: http://localhost:8080/api/v1
-- Frontend: http://localhost:3000 (coming soon)
-
-## Seed data
-
-`docker compose up` starts with an empty database. To load `seed/seed.json`, run this **after** the stack is up:
-
-```bash
-make seed
-```
-
-- It pipes [`scripts/seed.sql`](scripts/seed.sql) into `psql` in the `db` container, passing `seed.json` in as a variable. Postgres's `jsonb_to_recordset` turns the JSON arrays into rows.
-- It's safe to run more than once. Existing rows are skipped (`ON CONFLICT DO NOTHING`), so nothing is duplicated.
-- It's all one transaction, so either the whole seed is loaded or nothing is.
-- Seeding never runs automatically on `up`. Otherwise, data deleted through the API would come back after a restart.
-
-Other useful commands:
-
-```bash
-docker compose logs -f api                         # follow API logs
-docker compose exec db psql -U user -d pulse       # open a SQL shell
-docker compose down                                # stop (data is kept)
-docker compose down -v                             # stop and delete all data
-```
-
-## Repository layout
+## Layout
 
 ```
-backend/     Go API
-  cmd/api      REST API server
-  cmd/migrate  applies SQL migrations (runs before the API)
-  migrations/  goose SQL migrations
-scripts/     seed.sql (used by `make seed`)
-Makefile     `make seed`
-frontend/    React + TypeScript app
-seed/        seed.json (provided, unmodified)
+backend/
+  cmd/api, cmd/migrate
+  migrations/            goose SQL files
+  internal/
+    httpapi/  → service/  → store/      handlers → rules → SQL
+    model/                              shared types
+    events/                             SSE pub/sub
+frontend/src/
+  api/  → state/  → ui/                 fetch → TanStack Query hooks → pages
+scripts/seed.sql                        used by `make seed`
 ```
 
 ## Decisions & trade-offs
 
-_Written as the project progresses._
+- **Packages by layer.** Imports only go down, so handlers never touch SQL. Fine for 3 entities.
+- **Run status rules in one SQL `UPDATE ... WHERE status = ANY(...)`**, so two concurrent PATCHes can't both win. Illegal move → 409.
+- **Idempotency in one transaction**, with the key's primary key as the lock. Same key + same body replays the response; different body → 422.
+- **Cursor pagination** (`startedAt|id`) instead of OFFSET, so pages don't shift when new runs arrive.
+- **SSE via an in-process broker.** Simple, but only works with one API container.
+- **Cascade delete in the DB** (`ON DELETE CASCADE`).
+- **Migrations in a separate container**; the API won't start on a broken schema.
+- **nginx proxy instead of CORS**: one origin, no CORS code.
+- **Frontend cleanup**: requests are cancelled, the EventSource is closed and timers are cleared when you leave a page.
+- **`startedAt` is the creation time**, so `durationMs` includes queue time.
 
 ## With more time
 
-_TBD_
+- Playwright tests, including the 50-navigation memory check.
+- Postgres `LISTEN/NOTIFY` so SSE works across several API containers.
+- Expire old idempotency keys.

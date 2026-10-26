@@ -15,8 +15,6 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
-    ports:
-      - "5432:5432" # optional: for local dev only, not needed for inter-container comms  
 
   migrate:
     build: ./backend
