@@ -38,7 +38,7 @@ I didn't trust the unit tests alone, since they use fakes. So I tested the real 
 - **Query plan:** `EXPLAIN` on the runs list shows an index-only scan with no sort.
 - **SSE:** checked with curl. Live updates arrive, a no-op PATCH sends nothing, the stream closes on disconnect, and shutdown with streams open takes about 1s.
 - **Static checks and tests:** `go test -race`, `go vet`, strict `tsc`, `oxlint`, Vitest (including 50 mount/unmount cycles leaving no open EventSource).
-- **Browser memory check:** _pending_.
+- **Browser memory check:** a headless-Chrome script (not in the repo), run by a Claude subagent, went `/` → `/runs/:id` → `/` 50 times, and 200 times as a stress run. Back on `/` each time there were 0 live intervals and 0 open EventSources, with DOM nodes and listeners flat. The heap grew by about 0.5 MB and levelled off; a heap-snapshot diff put that down to V8 compiled code and DevTools buffers, not app objects.
 
 ## Assistant Attestation
 
